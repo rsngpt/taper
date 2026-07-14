@@ -2,7 +2,16 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.dokka)
     `maven-publish`
+}
+
+dokka {
+    moduleName.set("taper")
+    dokkaSourceSets.configureEach {
+        // The generated Room implementation classes are internal plumbing.
+        suppressGeneratedFiles.set(true)
+    }
 }
 
 group = "dev.taper"

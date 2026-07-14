@@ -1,5 +1,12 @@
 # Taper
 
+[![CI](https://img.shields.io/github/actions/workflow/status/rsngpt/taper/ci.yml?label=CI)](https://github.com/rsngpt/taper/actions)
+[![JitPack](https://img.shields.io/jitpack/version/com.github.rsngpt/taper?label=JitPack)](https://jitpack.io/#rsngpt/taper)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+**Website & docs: [rsngpt.github.io/taper](https://rsngpt.github.io/taper)** ·
+[API reference](https://rsngpt.github.io/taper/api/)
+
 On-device **memory and reliability SDK** for Android apps that embed AI agents
 (LLM API calls, tool-use loops, long context histories).
 
