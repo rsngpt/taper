@@ -72,6 +72,12 @@ publishing {
             pom {
                 name.set("Taper")
                 description.set("On-device memory and reliability SDK for Android apps that integrate AI agents.")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/rsngpt/taper/blob/main/LICENSE")
+                    }
+                }
             }
         }
     }
