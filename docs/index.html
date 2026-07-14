@@ -166,7 +166,7 @@ implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
 <section>
   <div class="wrap">
     <h2>Measured, not estimated</h2>
-    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses — each measurement in its own process, medians of 3 runs, on two profiles: a low-RAM emulator (2GB RAM, 192MB heap limit, chart + first table) and a <strong>real Redmi Note 7 Pro</strong> (4GB RAM, Android 10, 256MB heap limit, second table). Full methodology and raw CSV in the repo.</p>
+    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses — each measurement in its own process, medians of 3 runs, on three profiles: a low-RAM emulator (2GB RAM, 192MB heap limit, chart + first table) and two <strong>real devices</strong> — a Redmi Note&nbsp;7 Pro (4GB RAM, Android 10) and a Samsung Galaxy A31 (6GB RAM, Android 12), both with a 256MB heap limit. Full methodology and raw CSVs in the repo.</p>
 
     <figure class="chart">
       <div class="legend" aria-hidden="true">
@@ -256,6 +256,25 @@ implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
         <tr><td>10MB</td><td>103.5 MB / 1300 ms</td><td>47.0 MB / 1052 ms</td><td>6.5 MB / 845 ms</td><td>0 / 0 / 0</td></tr>
         <tr><td>25MB <em>(stress)</em></td><td>175.9 MB / 3156 ms</td><td>110.0 MB / 2617 ms</td><td>11.9 MB / 1854 ms</td><td>0 / 0 / 0</td></tr>
         <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td>213.0 MB / 5249 ms</td><td>21.2 MB / 3908 ms</td><td>1 / 0 / 0</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div style="height:28px"></div>
+    <h3 style="margin:0 0 8px">Real hardware: Samsung Galaxy A31 (6GB RAM, Android 12, 256MB heap limit)</h3>
+    <p class="sub" style="margin-bottom:16px">Same per-app heap limit as the Redmi, but no OOM anywhere — org.json squeaked through 50&nbsp;MB at 219.8&nbsp;MB, ~36&nbsp;MB below the cap. The identical heap cap with a different outcome shows the exact OOM point isn't a fixed number — it's whatever else is competing for that budget at the moment of the run. The <em>shape</em> of the result (Taper flat, DOM linear) is what reproduces across devices.</p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
+      <tbody>
+        <tr><td>100KB</td><td>0.7 MB / 12 ms</td><td>0.5 MB / 52 ms</td><td>0.2 MB / 79 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>500KB</td><td>3.3 MB / 56 ms</td><td>2.5 MB / 120 ms</td><td>0.9 MB / 97 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>1MB</td><td>6.6 MB / 121 ms</td><td>5.1 MB / 172 ms</td><td>1.9 MB / 142 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>2MB</td><td>9.1 MB / 287 ms</td><td>8.9 MB / 316 ms</td><td>3.8 MB / 235 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>5MB</td><td>22.4 MB / 694 ms</td><td>24.2 MB / 566 ms</td><td>6.6 MB / 567 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>10MB</td><td>44.8 MB / 1316 ms</td><td>46.7 MB / 1152 ms</td><td>7.9 MB / 1073 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>25MB <em>(stress)</em></td><td>109.3 MB / 3256 ms</td><td>114.3 MB / 2486 ms</td><td>11.6 MB / 2649 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>50MB <em>(stress)</em></td><td>219.8 MB / 6348 ms</td><td>229.3 MB / 5131 ms</td><td>20.5 MB / 5108 ms</td><td>0 / 0 / 0</td></tr>
       </tbody>
     </table>
     </div>

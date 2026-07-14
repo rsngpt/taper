@@ -177,6 +177,35 @@ away from death. Taper peaked at 21.2MB on the same payload. Parse times on
 this 2019-class SoC are 5–8× the emulator's, which also means DOM's multi-second
 GC-pressure stalls land on the UI thread's watch.
 
+### Real hardware: Samsung Galaxy A31 (6GB RAM)
+
+Same harness, run 2026-07-14 on a **Samsung Galaxy A31 (SM-A315F) — Android 12
+(API 31), 6GB RAM, `dalvik.vm.heapgrowthlimit=256m`, One UI, no `largeHeap`**.
+Unlike the Redmi, this device accepted the Test Orchestrator's install
+normally, so this run used the unmodified `./run_benchmark.sh` path — 24/24
+tests passed with zero failures.
+
+| Payload | DOM org.json peak heap / time | DOM Gson tree peak heap / time | Taper streaming peak heap / time | OOM count (org.json / Gson / Taper) |
+|---|---|---|---|---|
+| 100KB | 0.7 MB / 12 ms | 0.5 MB / 52 ms | 0.2 MB / 79 ms | 0 / 0 / 0 |
+| 500KB | 3.3 MB / 56 ms | 2.5 MB / 120 ms | 0.9 MB / 97 ms | 0 / 0 / 0 |
+| 1MB | 6.6 MB / 121 ms | 5.1 MB / 172 ms | 1.9 MB / 142 ms | 0 / 0 / 0 |
+| 2MB | 9.1 MB / 287 ms | 8.9 MB / 316 ms | 3.8 MB / 235 ms | 0 / 0 / 0 |
+| 5MB | 22.4 MB / 694 ms | 24.2 MB / 566 ms | 6.6 MB / 567 ms | 0 / 0 / 0 |
+| 10MB | 44.8 MB / 1316 ms | 46.7 MB / 1152 ms | 7.9 MB / 1073 ms | 0 / 0 / 0 |
+| 25MB *(stress, beyond spec)* | 109.3 MB / 3256 ms | 114.3 MB / 2486 ms | 11.6 MB / 2649 ms | 0 / 0 / 0 |
+| 50MB *(stress, beyond spec)* | 219.8 MB / 6348 ms | 229.3 MB / 5131 ms | 20.5 MB / 5108 ms | 0 / 0 / 0 |
+
+Same 256MB per-app heap limit as the Redmi, but **no OOM anywhere** — org.json
+squeaked through 50MB at 219.8MB, ~36MB below the cap. The two Android 4GB vs
+6GB devices share an identical `dalvik.vm.heapgrowthlimit`, so the difference
+isn't the per-app cap; it's everything else competing for that budget under
+One UI vs MIUI at the moment of the run. This is exactly why the README
+caveats each table as "measured on this device, at this moment" rather than a
+universal number: the *shape* of the result (Taper's heap flat, DOM's linear)
+reproduces across every device tested; the exact MB where DOM tips into OOM
+does not.
+
 ### Deterministic off-device proof
 
 The unit-test suite proves the same cliff without any device:
