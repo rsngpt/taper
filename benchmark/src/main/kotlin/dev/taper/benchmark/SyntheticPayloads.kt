@@ -28,7 +28,7 @@ object SyntheticPayloads {
                 writer.name("messages")
                 writer.beginArray()
                 var messageIndex = 0
-                // Leave room for the usage/metadata tail; each message is ~1.6KB.
+                // Leave room for the usage/metadata tail.
                 while (sink.buffer.size + fileBytesFlushed(file) < targetBytes - TAIL_RESERVE) {
                     writeMessage(writer, messageIndex, random)
                     messageIndex++
@@ -55,6 +55,13 @@ object SyntheticPayloads {
 
     private fun fileBytesFlushed(file: File): Long = file.length()
 
+    /**
+     * Node-dense on purpose: every message carries a tool call with structured
+     * arguments. DOM parsers pay per NODE (map entries, boxed numbers, string
+     * headers), and ART compresses ASCII string content to 1 byte/char, so a
+     * payload of a few giant strings would flatter DOM parsing. Tool-call-heavy
+     * agent responses — Taper's target workload — look like this.
+     */
     private fun writeMessage(writer: JsonWriter, index: Int, random: Random) {
         writer.beginObject()
         writer.name("index").value(index.toLong())
@@ -62,18 +69,20 @@ object SyntheticPayloads {
         writer.name("content").value(loremChunk(random, CONTENT_CHARS))
         writer.name("tool_calls")
         writer.beginArray()
-        if (index % 3 == 0) {
-            writer.beginObject()
-            writer.name("name").value("search_documents")
-            writer.name("arguments")
-            writer.beginObject()
-            writer.name("query").value(loremChunk(random, 80))
-            writer.name("top_k").value(8L)
-            writer.endObject()
-            writer.endObject()
-        }
+        writer.beginObject()
+        writer.name("id").value("call_$index")
+        writer.name("name").value("search_documents")
+        writer.name("arguments")
+        writer.beginObject()
+        writer.name("query").value(loremChunk(random, 60))
+        writer.name("top_k").value(8L)
+        writer.name("offset").value(index.toLong())
+        writer.name("include_citations").value(true)
+        writer.endObject()
+        writer.endObject()
         writer.endArray()
         writer.name("stop_reason").value("end_turn")
+        writer.name("latency_ms").value((20 + random.nextInt(400)).toLong())
         writer.endObject()
     }
 
@@ -85,7 +94,7 @@ object SyntheticPayloads {
         return sb.toString()
     }
 
-    private const val CONTENT_CHARS = 1400
+    private const val CONTENT_CHARS = 280
     private const val TAIL_RESERVE = 512L
 
     private val WORDS = listOf(
