@@ -162,6 +162,12 @@ process per measurement, 3 iterations, medians.
 | 25MB *(stress, beyond spec)* | 175.9 MB / 3156 ms | 110.0 MB / 2617 ms | 11.9 MB / 1854 ms | 0 / 0 / 0 |
 | 50MB *(stress, beyond spec)* | **OutOfMemoryError** | 213.0 MB / 5249 ms | 21.2 MB / 3908 ms | 1 / 0 / 0 |
 
+A repeat run on the same device reproduced the heap medians within a few
+percent at payloads ≥5MB (org.json 103.5→102.2MB at 10MB; Gson 213→208MB at
+50MB) and reproduced the org.json OOM at 50MB; sub-2MB medians vary more with
+GC timing, and wall-times inflated up to ~2.5× as the SoC thermally throttled
+on the back-to-back run (both raw CSVs are in `benchmark/results/`).
+
 The real device is harsher on the naive path than the emulator: org.json (whole
 body as a `String`, then a tree) cost roughly **10× the payload size** here —
 103.5MB of heap for a 10MB response — and hit `OutOfMemoryError` at 50MB even
