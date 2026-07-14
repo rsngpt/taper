@@ -166,7 +166,7 @@ implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
 <section>
   <div class="wrap">
     <h2>Measured, not estimated</h2>
-    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses, on an Android&nbsp;API&nbsp;37 emulator profile with 2GB RAM and the default 192MB app heap limit — each measurement in its own process, medians of 3 runs. Full methodology and raw CSV in the repo.</p>
+    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses — each measurement in its own process, medians of 3 runs, on two profiles: a low-RAM emulator (2GB RAM, 192MB heap limit, chart + first table) and a <strong>real Redmi Note 7 Pro</strong> (4GB RAM, Android 10, 256MB heap limit, second table). Full methodology and raw CSV in the repo.</p>
 
     <figure class="chart">
       <div class="legend" aria-hidden="true">
@@ -237,6 +237,25 @@ implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
         <tr><td>10MB</td><td>43.2 MB / 175 ms</td><td>41.0 MB / 149 ms</td><td>2.4 MB / 160 ms</td><td>0 / 0 / 0</td></tr>
         <tr><td>25MB <em>(stress)</em></td><td>108.0 MB / 408 ms</td><td>100.6 MB / 296 ms</td><td>5.6 MB / 328 ms</td><td>0 / 0 / 0</td></tr>
         <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td class="oom">OutOfMemoryError</td><td>10.5 MB / 622 ms</td><td>1 / 1 / 0</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div style="height:28px"></div>
+    <h3 style="margin:0 0 8px">Real hardware: Redmi Note 7 Pro (4GB RAM, Android 10, 256MB heap limit)</h3>
+    <p class="sub" style="margin-bottom:16px">The real device is harsher on the naive path: org.json cost ~10× the payload size — 103.5&nbsp;MB of heap for a 10&nbsp;MB response — and OOM'd at 50&nbsp;MB despite the larger heap limit; Gson survived 50&nbsp;MB only by consuming 213&nbsp;MB of the 256&nbsp;MB budget.</p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
+      <tbody>
+        <tr><td>100KB</td><td>1.4 MB / 33 ms</td><td>0.5 MB / 45 ms</td><td>0.2 MB / 14 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>500KB</td><td>4.5 MB / 69 ms</td><td>2.6 MB / 87 ms</td><td>1.1 MB / 51 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>1MB</td><td>7.5 MB / 161 ms</td><td>5.0 MB / 175 ms</td><td>1.8 MB / 124 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>2MB</td><td>18.1 MB / 304 ms</td><td>9.9 MB / 329 ms</td><td>2.3 MB / 225 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>5MB</td><td>58.8 MB / 830 ms</td><td>24.1 MB / 1018 ms</td><td>3.6 MB / 464 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>10MB</td><td>103.5 MB / 1300 ms</td><td>47.0 MB / 1052 ms</td><td>6.5 MB / 845 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>25MB <em>(stress)</em></td><td>175.9 MB / 3156 ms</td><td>110.0 MB / 2617 ms</td><td>11.9 MB / 1854 ms</td><td>0 / 0 / 0</td></tr>
+        <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td>213.0 MB / 5249 ms</td><td>21.2 MB / 3908 ms</td><td>1 / 0 / 0</td></tr>
       </tbody>
     </table>
     </div>

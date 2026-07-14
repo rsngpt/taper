@@ -110,6 +110,8 @@ ConnectivityDrainTrigger(context, queue, syncer, scope).start()
 
 ## Benchmark (measured, not estimated)
 
+### Emulator: low-RAM profile (2GB)
+
 Produced by `./run_benchmark.sh` (instrumented tests in `benchmark/`), run on
 2026-07-14 against a **Pixel emulator, Android API 37, 2GB RAM,
 `dalvik.vm.heapgrowthlimit=192m`, no `largeHeap`** — i.e. the default heap
@@ -136,11 +138,42 @@ limit between 25MB and 50MB and crashed; Taper's peak heap stayed roughly two
 orders of magnitude lower (it scales with extracted fields + nesting depth, not
 document size), with parse times in the same range as DOM. Peak heap = peak
 Java heap during parse minus settled baseline, sampled every ~2ms; peak PSS was
-also recorded (raw CSV: `benchmark/build/benchmark-results.csv`). Numbers are
+also recorded (raw CSVs committed under `benchmark/results/`). Numbers are
 specific to this payload shape and device profile — rerun `./run_benchmark.sh`
 on your own target hardware before quoting them.
 
-The unit-test suite proves the same cliff deterministically off-device:
+### Real hardware: Redmi Note 7 Pro (4GB RAM)
+
+Same harness, run 2026-07-14 on a **Redmi Note 7 Pro — Android 10 (API 29),
+4GB RAM, `dalvik.vm.heapgrowthlimit=256m`, MIUI, no `largeHeap`**. One
+difference in mechanics, same isolation guarantee: MIUI blocks the Test
+Orchestrator's permission-granting install, so each (strategy × size) pair was
+run as its own `am instrument` invocation from the host — still one fresh
+process per measurement, 3 iterations, medians.
+
+| Payload | DOM org.json peak heap / time | DOM Gson tree peak heap / time | Taper streaming peak heap / time | OOM count (org.json / Gson / Taper) |
+|---|---|---|---|---|
+| 100KB | 1.4 MB / 33 ms | 0.5 MB / 45 ms | 0.2 MB / 14 ms | 0 / 0 / 0 |
+| 500KB | 4.5 MB / 69 ms | 2.6 MB / 87 ms | 1.1 MB / 51 ms | 0 / 0 / 0 |
+| 1MB | 7.5 MB / 161 ms | 5.0 MB / 175 ms | 1.8 MB / 124 ms | 0 / 0 / 0 |
+| 2MB | 18.1 MB / 304 ms | 9.9 MB / 329 ms | 2.3 MB / 225 ms | 0 / 0 / 0 |
+| 5MB | 58.8 MB / 830 ms | 24.1 MB / 1018 ms | 3.6 MB / 464 ms | 0 / 0 / 0 |
+| 10MB | 103.5 MB / 1300 ms | 47.0 MB / 1052 ms | 6.5 MB / 845 ms | 0 / 0 / 0 |
+| 25MB *(stress, beyond spec)* | 175.9 MB / 3156 ms | 110.0 MB / 2617 ms | 11.9 MB / 1854 ms | 0 / 0 / 0 |
+| 50MB *(stress, beyond spec)* | **OutOfMemoryError** | 213.0 MB / 5249 ms | 21.2 MB / 3908 ms | 1 / 0 / 0 |
+
+The real device is harsher on the naive path than the emulator: org.json (whole
+body as a `String`, then a tree) cost roughly **10× the payload size** here —
+103.5MB of heap for a 10MB response — and hit `OutOfMemoryError` at 50MB even
+with this device's larger 256MB heap limit. Gson tree survived 50MB only by
+consuming 213MB, a few percent below the limit, i.e. one background allocation
+away from death. Taper peaked at 21.2MB on the same payload. Parse times on
+this 2019-class SoC are 5–8× the emulator's, which also means DOM's multi-second
+GC-pressure stalls land on the UI thread's watch.
+
+### Deterministic off-device proof
+
+The unit-test suite proves the same cliff without any device:
 `ConstrainedHeapTest` DOM-parses a 16MB payload in a child JVM capped at 32MB
 (dies with `OutOfMemoryError`) and streams the identical file with Taper in the
 same cap (succeeds).
