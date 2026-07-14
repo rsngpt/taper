@@ -5,3 +5,6 @@ local.properties
 *.iml
 .idea/
 .kotlin/
+CLAUDE.md
+.claude/
+
