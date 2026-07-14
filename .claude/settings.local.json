@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/rsngpt/Library/Android/sdk/platforms/**)",
+      "Read(//Users/rsngpt/Library/Android/sdk/**)",
+      "Bash(~/Library/Android/sdk/emulator/emulator -list-avds)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- largeHeap deliberately NOT set: the benchmark should run under the same
+         default per-app heap limit (dalvik.vm.heapgrowthlimit) a real app gets. -->
+    <application android:label="Taper Benchmark" />
+</manifest>
