@@ -5,291 +5,1106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Taper — on-device memory &amp; reliability SDK for AI-agent Android apps</title>
 <meta name="description" content="Parse multi-megabyte agent JSON without OOM, stop retrying unretryable failures, and sync offline updates in coalesced batches. Kotlin, minSdk 24, MIT.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Ctext x='16' y='23' font-family='system-ui' font-size='20' font-weight='700' fill='white' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="taperfavicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --grid: #e1e0d9;
-    --baseline: #c3c2b7;
-    --border: rgba(11,11,11,0.10);
-    --accent: #2a78d6;
-    --series-1: #2a78d6;   /* DOM baseline */
-    --series-2: #1baf7a;   /* Taper */
-    --critical: #d03b3b;
-    --code-bg: #f2f1ed;
+    color-scheme: light dark;
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    
+    /* Premium Color System */
+    --page: #f8fafc;
+    --surface: rgba(255, 255, 255, 0.45);
+    --surface-hover: rgba(255, 255, 255, 0.75);
+    --ink: #0f172a;
+    --ink-2: #475569;
+    --muted: #94a3b8;
+    --grid: #e2e8f0;
+    --sub-grid: rgba(0, 86, 255, 0.015);
+    --baseline: #cbd5e1;
+    --border: rgba(15, 23, 42, 0.06);
+    --border-strong: rgba(15, 23, 42, 0.12);
+    --accent: #0056FF;
+    --series-1: #94a3b8;   /* DOM baseline - neutral slate */
+    --series-2: #0056FF;   /* Taper - brand accent blue */
+    --critical: #ef4444;
+    --code-text: #0f172a;
+    --code-kw: #0056FF;
+    --code-cmt: #64748b;
+    
+    /* Decorative */
+    --primary-glow: rgba(0, 86, 255, 0.04);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 16px 24px -4px rgba(15, 23, 42, 0.05), 0 8px 12px -4px rgba(15, 23, 42, 0.04);
+    --shadow-glow: 0 0 30px 0 rgba(0, 86, 255, 0.05);
+    --card-radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    
+    /* Liquid Glass tokens */
+    --liquid-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 250, 252, 0.4) 100%);
+    --liquid-border: rgba(15, 23, 42, 0.08);
+    --liquid-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 12px rgba(15, 23, 42, 0.03);
+    --liquid-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 12px 28px rgba(15, 23, 42, 0.08), var(--shadow-glow);
+    --liquid-blur: blur(20px) saturate(190%);
+    --liquid-code-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 14, 30, 0.85) 100%);
+    --liquid-code-border: rgba(255, 255, 255, 0.1);
+    --liquid-code-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), var(--shadow-md);
+    --liquid-header-bg: rgba(255, 255, 255, 0.06);
+    --liquid-header-border: rgba(15, 23, 42, 0.06);
   }
+
   @media (prefers-color-scheme: dark) {
     :root {
-      color-scheme: dark;
-      --page: #0d0d0d;
-      --surface: #1a1a19;
-      --ink: #ffffff;
-      --ink-2: #c3c2b7;
-      --muted: #898781;
-      --grid: #2c2c2a;
-      --baseline: #383835;
-      --border: rgba(255,255,255,0.10);
-      --accent: #3987e5;
-      --series-1: #3987e5;
-      --series-2: #199e70;
-      --critical: #e66767;
-      --code-bg: #232322;
+      --page: #040610;
+      --surface: rgba(11, 15, 30, 0.55);
+      --surface-hover: rgba(19, 24, 44, 0.85);
+      --ink: #f8fafc;
+      --ink-2: #cbd5e1;
+      --muted: #64748b;
+      --grid: rgba(255, 255, 255, 0.06);
+      --sub-grid: rgba(0, 86, 255, 0.008);
+      --baseline: rgba(255, 255, 255, 0.15);
+      --border: rgba(255, 255, 255, 0.05);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --accent: #0056FF;
+      --series-1: #475569;
+      --series-2: #0056FF;
+      --critical: #f87171;
+      --code-text: #f8fafc;
+      --code-kw: #38bdf8;
+      --code-cmt: #94a3b8;
+      
+      --primary-glow: rgba(0, 86, 255, 0.18);
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 16px 24px -4px rgba(0, 0, 0, 0.5), 0 8px 12px -4px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 30px 0 rgba(0, 86, 255, 0.15);
+      
+      /* Dark Liquid Glass tokens */
+      --liquid-bg: linear-gradient(135deg, rgba(13, 18, 36, 0.75) 0%, rgba(9, 12, 24, 0.65) 100%);
+      --liquid-border: rgba(255, 255, 255, 0.08);
+      --liquid-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.3);
+      --liquid-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 28px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+      --liquid-blur: blur(20px) saturate(190%);
+      --liquid-code-bg: linear-gradient(135deg, rgba(7, 10, 20, 0.85) 0%, rgba(5, 7, 14, 0.8) 100%);
+      --liquid-code-border: rgba(255, 255, 255, 0.06);
+      --liquid-code-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-md);
+      --liquid-header-bg: rgba(255, 255, 255, 0.03);
+      --liquid-header-border: rgba(255, 255, 255, 0.04);
     }
   }
+
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
     background: var(--page);
     color: var(--ink);
-    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow-x: hidden;
   }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
-  header.hero { padding: 72px 0 48px; text-align: center; }
-  .hero h1 { font-size: 44px; margin: 0 0 4px; letter-spacing: -0.5px; }
-  .hero .tag { font-size: 20px; color: var(--ink-2); margin: 0 auto 20px; max-width: 640px; }
-  .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
-  .badges img { height: 20px; }
-  .install {
-    max-width: 660px; margin: 0 auto; text-align: left;
-    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
-    position: relative; padding: 14px 16px;
+
+  
+  a { color: var(--accent); text-decoration: none; transition: var(--transition); }
+  a:hover { color: var(--accent); text-decoration: underline; }
+  
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  
+  /* Sticky Navbar */
+  .nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    background: rgba(248, 250, 252, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    transition: var(--transition);
   }
-  .install pre { margin: 0; overflow-x: auto; font: 13.5px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  @media (prefers-color-scheme: dark) {
+    .nav-bar {
+      background: rgba(4, 6, 16, 0.8);
+    }
+  }
+  .nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+  }
+  .brand-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+  }
+  .taper-logo {
+    height: 24px;
+    width: auto;
+  }
+  .taper-text {
+    height: 18px;
+    width: auto;
+    transition: var(--transition);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .nav-links a {
+    color: var(--ink-2);
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .nav-links a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .btn-nav {
+    padding: 6px 16px;
+    background: var(--primary-glow);
+    color: var(--accent) !important;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 86, 255, 0.2);
+  }
+  .btn-nav:hover {
+    background: var(--accent) !important;
+    color: #fff !important;
+  }
+
+  /* Hero Section */
+  header.hero {
+    padding: 80px 0 60px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .hero-logo-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .hero-taper-logo {
+    height: 96px;
+    width: auto;
+    /* Clean white logo with brand-blue glow shadow */
+    filter: drop-shadow(0 0 32px rgba(0, 86, 255, 0.25));
+  }
+  .hero-taper-text {
+    height: 56px;
+    width: auto;
+    transform: translateY(2px);
+    transition: var(--transition);
+  }
+  
+  /* Light mode brand logo and text adjustment */
+  @media (prefers-color-scheme: light) {
+    .taper-logo, .taper-text, .hero-taper-logo, .hero-taper-text {
+      filter: invert(1);
+    }
+  }
+
+  .hero .tag {
+    font-size: 22px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: 0 auto 32px;
+    max-width: 720px;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+  }
+  .hero .tag strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .badges {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .badges img {
+    height: 22px;
+  }
+  
+  /* Code Editor Window */
+  .code-window {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto 36px;
+    overflow: visible;
+    text-align: left;
+  }
+  .code-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: var(--liquid-header-bg);
+    border-bottom: 1px solid var(--liquid-header-border);
+    border-top-left-radius: calc(var(--card-radius) - 1px);
+    border-top-right-radius: calc(var(--card-radius) - 1px);
+  }
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .window-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .window-dots .dot.red { background: #ff5f56; }
+  .window-dots .dot.yellow { background: #ffbd2e; }
+  .window-dots .dot.green { background: #27c93f; }
+  .window-title {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
   .copy-btn {
-    position: absolute; top: 10px; right: 10px;
-    border: 1px solid var(--border); background: var(--surface); color: var(--ink-2);
-    border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    transition: var(--transition);
   }
-  .copy-btn:hover { color: var(--ink); }
-  .cta { margin-top: 22px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .copy-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+  }
+  .code-window-body {
+    padding: 18px 22px;
+  }
+  .code-window-body pre {
+    margin: 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--code-text);
+  }
+  
+  .cta { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
   .btn {
-    display: inline-block; padding: 10px 22px; border-radius: 8px; font-weight: 600;
-    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 28px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none !important;
   }
-  .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
-  .btn.primary:hover { filter: brightness(1.08); text-decoration: none; }
-  .btn.ghost { color: var(--ink); background: var(--surface); }
-  section { padding: 44px 0; border-top: 1px solid var(--border); }
-  h2 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.3px; }
-  .sub { color: var(--ink-2); margin: 0 0 28px; max-width: 720px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  .btn.primary {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 0 10px rgba(0, 86, 255, 0.15);
   }
-  .card h3 { margin: 0 0 6px; font-size: 17px; }
-  .card p { margin: 0 0 12px; color: var(--ink-2); font-size: 14.5px; }
+  .btn.primary:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0, 86, 255, 0.35);
+  }
+  .btn.ghost {
+    color: var(--ink);
+    background: transparent;
+    border: 1.5px solid var(--border-strong);
+  }
+  .btn.ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 15px rgba(0, 86, 255, 0.1);
+  }
+  
+  /* Sections */
+  section { padding: 80px 0; }
+  h2 { font-size: 32px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.5px; }
+  .sub { font-size: 16.5px; color: var(--ink-2); margin: 0 0 40px; max-width: 820px; line-height: 1.6; }
+  
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }
+  
+  /* HUD Blueprint System */
+  .hud-block {
+    position: relative;
+    padding: 32px;
+    background: var(--liquid-bg);
+    border: 1px solid var(--liquid-border);
+    border-radius: var(--card-radius);
+    box-shadow: var(--liquid-shadow);
+    backdrop-filter: var(--liquid-blur);
+    -webkit-backdrop-filter: var(--liquid-blur);
+    transition: var(--transition);
+  }
+
+  /* Hover expansion effects */
+  .hud-block:hover {
+    border-color: var(--accent);
+    box-shadow: var(--liquid-shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  .hud-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.85;
+  }
+
+  .hud-block h3 { margin: 0 0 10px; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .hud-block p { margin: 0 0 16px; color: var(--ink-2); font-size: 15px; line-height: 1.6; }
+  
+  /* Syntax Highlighting */
   pre.code {
-    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px 14px; overflow-x: auto; margin: 0;
-    font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13.2px;
+    line-height: 1.65;
+    color: var(--code-text);
   }
-  .cmt { color: var(--muted); }
-  .kw { color: var(--accent); }
-  figure.chart { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  figure.chart figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; }
-  .legend { display: flex; gap: 18px; font-size: 13.5px; color: var(--ink-2); margin-bottom: 12px; }
-  .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: baseline; }
+  .code-container-ide {
+    background: var(--liquid-code-bg);
+    border: 1px solid var(--liquid-code-border);
+    box-shadow: var(--liquid-code-shadow);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+  }
+  .code-container-ide-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: var(--liquid-header-bg);
+    border-bottom: 1px solid var(--liquid-header-border);
+  }
+  .code-container-ide-header .circle {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .code-container-ide-header .circle:nth-child(1) { background: #ff5f56; }
+  .code-container-ide-header .circle:nth-child(2) { background: #ffbd2e; }
+  .code-container-ide-header .circle:nth-child(3) { background: #27c93f; }
+  .code-container-ide pre.code {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .cmt { color: var(--code-cmt); font-style: italic; }
+  .kw { color: var(--code-kw); font-weight: 500; }
+  
+  /* Charts & Visualizations */
+  figure.chart {
+    margin: 0 0 32px;
+    padding: 32px;
+  }
+  figure.chart figcaption { font-size: 13.5px; color: var(--muted); margin-top: 20px; line-height: 1.5; }
+  .legend { display: flex; gap: 24px; font-size: 14px; font-weight: 700; color: var(--ink-2); margin-bottom: 24px; }
+  .legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 8px; vertical-align: middle; }
   .chart-svg { width: 100%; height: auto; display: block; }
-  .bar { cursor: default; }
+  .bar { cursor: pointer; transition: opacity 0.2s ease; }
+  .bar:hover { opacity: 0.85; }
+  
   #tooltip {
-    position: fixed; pointer-events: none; z-index: 10; display: none;
-    background: var(--ink); color: var(--page); font-size: 12.5px; line-height: 1.4;
-    padding: 6px 10px; border-radius: 6px; max-width: 260px;
+    position: fixed; pointer-events: none; z-index: 1000; display: none;
+    background: rgba(15, 23, 42, 0.95); color: #ffffff; font-size: 13px;
+    line-height: 1.4; padding: 8px 12px; border-radius: 8px; max-width: 280px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    font-weight: 500;
   }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
-  th { color: var(--ink-2); font-weight: 600; background: var(--code-bg); }
+  
+  /* Tables */
+  .table-scroll {
+    margin-bottom: 36px;
+  }
+  .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    border-radius: calc(var(--card-radius) - 1px);
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: transparent; }
+  th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th { color: var(--ink); font-weight: 700; background: var(--surface-hover); font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
   tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-hover); }
   .oom { color: var(--critical); font-weight: 700; }
-  .table-scroll { overflow-x: auto; border-radius: 12px; }
-  .arch-svg { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-  ul.honest { color: var(--ink-2); padding-left: 22px; }
-  ul.honest li { margin-bottom: 8px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge.badge-oom {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--critical);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+  
+  /* Architecture Diagram */
+  .arch-svg {
+    width: 100%; height: auto; display: block;
+    background: var(--liquid-bg); border: 1px solid var(--liquid-border);
+    border-radius: var(--card-radius); box-shadow: var(--liquid-shadow);
+    padding: 24px;
+    backdrop-filter: var(--liquid-blur);
+    -webkit-backdrop-filter: var(--liquid-blur);
+  }
+  .arch-svg text {
+    font-family: var(--font-sans) !important;
+    font-weight: 600;
+  }
+  
+  ul.honest { color: var(--ink-2); padding-left: 20px; margin-bottom: 24px; }
+  ul.honest li { margin-bottom: 12px; font-size: 15.5px; line-height: 1.6; }
   ul.honest b { color: var(--ink); }
-  footer { border-top: 1px solid var(--border); padding: 28px 0 44px; color: var(--muted); font-size: 14px; text-align: center; }
-  footer a { color: var(--ink-2); }
+  
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14.5px; text-align: center; }
+  footer a { color: var(--ink-2); font-weight: 600; }
+  footer a:hover { color: var(--accent); text-decoration: none; }
+
+  /* Premium background ambient glows */
+  .hero-bg-glows {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1400px;
+    height: 800px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .glow-1 {
+    position: absolute;
+    top: -20%;
+    left: 15%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 86, 255, 0.08) 0%, transparent 70%);
+    filter: blur(80px);
+    animation: floatGlow1 20s ease-in-out infinite alternate;
+  }
+  .glow-2 {
+    position: absolute;
+    top: 10%;
+    right: 10%;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+    filter: blur(100px);
+    animation: floatGlow2 25s ease-in-out infinite alternate;
+  }
+  @media (prefers-color-scheme: dark) {
+    .glow-1 {
+      background: radial-gradient(circle, rgba(0, 86, 255, 0.16) 0%, transparent 70%);
+    }
+    .glow-2 {
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+    }
+  }
+
+  /* Premium Animations */
+  @keyframes floatGlow1 {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+      filter: blur(80px) hue-rotate(0deg);
+    }
+    50% {
+      transform: translate(-50px, 30px) scale(1.15) rotate(180deg);
+      filter: blur(95px) hue-rotate(25deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(360deg);
+      filter: blur(80px) hue-rotate(0deg);
+    }
+  }
+  @keyframes floatGlow2 {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+      filter: blur(100px) hue-rotate(0deg);
+    }
+    50% {
+      transform: translate(60px, -40px) scale(1.12) rotate(-180deg);
+      filter: blur(115px) hue-rotate(-25deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(-360deg);
+      filter: blur(100px) hue-rotate(0deg);
+    }
+  }
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Entrance animations on load */
+  .hero-logo-container,
+  .hero .tag,
+  .badges,
+  .code-window,
+  .cta {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .hero-logo-container { animation-delay: 0.05s; }
+  .hero .tag { animation-delay: 0.15s; }
+  .badges { animation-delay: 0.25s; }
+  .code-window { animation-delay: 0.35s; }
+  .cta { animation-delay: 0.45s; }
+
+  /* Scroll Reveal styles */
+  .reveal-hidden {
+    opacity: 0 !important;
+    transform: translateY(32px) !important;
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .reveal-active {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  
+  /* Staggered card layouts */
+  .cards.reveal-hidden > .hud-block {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cards.reveal-active > .hud-block {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .cards.reveal-active > .hud-block:nth-child(1) { transition-delay: 0.05s; }
+  .cards.reveal-active > .hud-block:nth-child(2) { transition-delay: 0.15s; }
+  .cards.reveal-active > .hud-block:nth-child(3) { transition-delay: 0.25s; }
+
+  /* Tabs Layout */
+  .tabs-nav {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 0 auto 36px;
+    width: fit-content;
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .tab-btn::before { content: "[ "; color: transparent; transition: var(--transition); }
+  .tab-btn::after { content: " ]"; color: transparent; transition: var(--transition); }
+  .tab-btn:hover {
+    color: var(--ink);
+  }
+  .tab-btn.active {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(0, 86, 255, 0.15);
+  }
+  .tab-btn.active::before, .tab-btn.active::after {
+    color: var(--accent);
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tab-panel.active {
+    display: block;
+    animation: fadeInTab 0.4s ease-out;
+  }
+  @keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Icon wrappers for cards */
+  .card-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(0, 86, 255, 0.08);
+    border: 1px solid rgba(0, 86, 255, 0.15);
+    color: var(--accent);
+    margin-bottom: 20px;
+    transition: var(--transition);
+  }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .hud-block:hover .card-icon-wrapper {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(0, 86, 255, 0.4);
+  }
+
+  /* Interactive Halftone Canvas */
+  .halftone-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -2;
+  }
+
+
 </style>
 </head>
 <body>
 
+<div class="hero-bg-glows" aria-hidden="true">
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+</div>
+
+
+
 <header class="hero wrap">
-  <h1>Taper</h1>
+  <div class="hero-logo-container">
+    <img class="hero-taper-logo" src="taperlogo.svg" alt="Taper Logo">
+    <img class="hero-taper-text" src="tapertext.svg" alt="Taper">
+  </div>
   <p class="tag">On-device <strong>memory &amp; reliability SDK</strong> for Android apps that embed AI agents — parse huge responses without OOM, stop futile retries, sync offline safely.</p>
   <div class="badges">
     <a href="https://github.com/rsngpt/taper/actions"><img src="https://img.shields.io/github/actions/workflow/status/rsngpt/taper/ci.yml?label=CI" alt="CI status"></a>
     <a href="https://jitpack.io/#rsngpt/taper"><img src="https://img.shields.io/jitpack/version/com.github.rsngpt/taper?label=JitPack" alt="JitPack version"></a>
     <a href="https://github.com/rsngpt/taper/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
   </div>
-  <div class="install">
-    <button class="copy-btn" data-copy="install">Copy</button>
-    <pre id="install"><span class="cmt">// settings.gradle.kts</span>
+  
+  <div class="code-window hud-block">
+    <div class="hud-block-inner">
+      <div class="code-window-header">
+        <div class="window-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="window-title">build.gradle.kts</div>
+        <button class="copy-btn" data-copy="install">Copy</button>
+      </div>
+      <div class="code-window-body">
+        <pre id="install"><span class="cmt">// settings.gradle.kts</span>
 repositories { maven(<span class="kw">"https://jitpack.io"</span>) }
 
 <span class="cmt">// build.gradle.kts</span>
 implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
+      </div>
+    </div>
   </div>
+
   <div class="cta">
-    <a class="btn primary" href="https://github.com/rsngpt/taper">GitHub&nbsp;→</a>
-    <a class="btn ghost" href="api/index.html">API reference</a>
-    <a class="btn ghost" href="https://github.com/rsngpt/taper#readme">Full docs</a>
+    <a class="btn primary" href="https://github.com/rsngpt/taper">GitHub Repository&nbsp;→</a>
+    <a class="btn ghost" href="api/index.html">API Reference</a>
+    <a class="btn ghost" href="https://github.com/rsngpt/taper#readme">Full Documentation</a>
   </div>
 </header>
 
-<section>
+<section id="problem">
   <div class="wrap">
     <h2>The problem</h2>
     <p class="sub">Agent-integrated apps hit three failure modes that hurt most on the budget devices (4–6GB RAM) most users actually own.</p>
     <div class="cards">
-      <div class="card">
-        <h3>💥 DOM parsing OOMs</h3>
-        <p><code>body.string()</code> → <code>org.json</code> materialises the whole payload as a tree of maps, boxed numbers, and string headers — a multiple of the raw size, inside a ~192MB default app heap.</p>
+      <div class="hud-block">
+        <div class="hud-block-inner">
+          <div class="hud-tag">SYS-01 // INGEST</div>
+          <div class="card-icon-wrapper" aria-hidden="true">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <line x1="9" y1="1" x2="9" y2="4"/>
+              <line x1="15" y1="1" x2="15" y2="4"/>
+              <line x1="9" y1="20" x2="9" y2="23"/>
+              <line x1="15" y1="20" x2="15" y2="23"/>
+              <line x1="20" y1="9" x2="23" y2="9"/>
+              <line x1="20" y1="15" x2="23" y2="15"/>
+              <line x1="1" y1="9" x2="4" y2="9"/>
+              <line x1="1" y1="15" x2="4" y2="15"/>
+            </svg>
+          </div>
+          <h3>DOM parsing OOMs</h3>
+          <p><code>body.string()</code> → <code>org.json</code> materialises the whole payload as a tree of maps, boxed numbers, and string headers — a multiple of the raw size, inside a ~192MB default app heap.</p>
+        </div>
       </div>
-      <div class="card">
-        <h3>🔁 Blind retries</h3>
-        <p>A malformed tool call or policy rejection can <em>never</em> succeed on retry — but naive loops retry it anyway, burning tokens, battery, and money. A radio blip, meanwhile, deserves the retry it often doesn't get.</p>
+      <div class="hud-block">
+        <div class="hud-block-inner">
+          <div class="hud-tag">SYS-02 // TRIAGE</div>
+          <div class="card-icon-wrapper" aria-hidden="true">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M16 3h5v5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M8 21H3v-5"/>
+            </svg>
+          </div>
+          <h3>Blind retries</h3>
+          <p>A malformed tool call or policy rejection can <em>never</em> succeed on retry — but naive loops retry it anyway, burning tokens, battery, and money. A radio blip, meanwhile, deserves the retry it often doesn't get.</p>
+        </div>
       </div>
-      <div class="card">
-        <h3>📶 Reconnect floods</h3>
-        <p>Going offline mid-conversation queues updates; coming back online fires them one request at a time — redundant network chatter exactly when the connection is weakest.</p>
+      <div class="hud-block">
+        <div class="hud-block-inner">
+          <div class="hud-tag">SYS-03 // SYNC</div>
+          <div class="card-icon-wrapper" aria-hidden="true">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12" y2="20"/>
+            </svg>
+          </div>
+          <h3>Reconnect floods</h3>
+          <p>Going offline mid-conversation queues updates; coming back online fires them one request at a time — redundant network chatter exactly when the connection is weakest.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section id="benchmarks">
   <div class="wrap">
     <h2>Measured, not estimated</h2>
-    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses — each measurement in its own process, medians of 3 runs, on three profiles: a low-RAM emulator (2GB RAM, 192MB heap limit, chart + first table) and two <strong>real devices</strong> — a Redmi Note&nbsp;7 Pro (4GB RAM, Android 10) and a Samsung Galaxy A31 (6GB RAM, Android 12), both with a 256MB heap limit. Full methodology and raw CSVs in the repo.</p>
+    <p class="sub">Peak Java heap while parsing the same synthetic tool-call-heavy agent responses — each measurement in its own process, medians of 3 runs. Select a device to view its peak heap graph and detailed comparison table.</p>
 
-    <figure class="chart">
-      <div class="legend" aria-hidden="true">
-        <span><span class="sw" style="background:var(--series-1)"></span>DOM (org.json)</span>
-        <span><span class="sw" style="background:var(--series-2)"></span>Taper streaming</span>
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-target="device-emulator">Emulator (Low-RAM)</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-target="device-redmi">Redmi Note 7 Pro</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-target="device-samsung">Samsung Galaxy A31</button>
+    </div>
+
+    <!-- PANEL 1: EMULATOR -->
+    <div class="tab-panel active" id="device-emulator" role="tabpanel">
+      <p class="sub" style="margin-bottom: 24px; font-weight: 500; text-align: center;">Emulator low-RAM profile (2GB RAM, 192MB heap limit, no largeHeap)</p>
+      
+      <figure class="chart hud-block">
+        <div class="hud-block-inner">
+          <div class="legend" aria-hidden="true">
+            <span><span class="sw" style="background:var(--series-1)"></span>DOM (org.json)</span>
+            <span><span class="sw" style="background:var(--series-2)"></span>Taper streaming</span>
+          </div>
+          <svg class="chart-svg" viewBox="0 0 760 330" role="img" aria-label="Grouped bar chart of peak heap for Emulator: DOM parsing grows to 108 megabytes at a 25 megabyte payload and crashes with OutOfMemoryError at 50 megabytes, while Taper stays under 10.5 megabytes.">
+            <!-- gridlines: 0/25/50/75/100 MB, plot x=90..610 (520px / 108MB) -->
+            <g stroke="var(--grid)" stroke-width="1">
+              <line x1="90" y1="16" x2="90" y2="292"/>
+              <line x1="210.4" y1="16" x2="210.4" y2="292"/>
+              <line x1="330.7" y1="16" x2="330.7" y2="292"/>
+              <line x1="451.1" y1="16" x2="451.1" y2="292"/>
+              <line x1="571.5" y1="16" x2="571.5" y2="292"/>
+            </g>
+            <g fill="var(--muted)" font-size="11" text-anchor="middle">
+              <text x="90" y="308">0</text><text x="210.4" y="308">25</text>
+              <text x="330.7" y="308">50</text><text x="451.1" y="308">75</text>
+              <text x="571.5" y="308">100 MB peak heap</text>
+            </g>
+            <g font-size="12.5">
+              <!-- 1MB -->
+              <text x="78" y="49" text-anchor="end" fill="var(--ink-2)">1MB</text>
+              <rect class="bar" data-t="1MB payload — DOM org.json: 4.3 MB peak heap / 32 ms" x="90" y="28" width="20.7" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="116" y="39" fill="var(--ink-2)" font-size="11.5">4.3</text>
+              <rect class="bar" data-t="1MB payload — Taper: 0.7 MB peak heap / 39 ms" x="90" y="44" width="4" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="100" y="55" fill="var(--ink-2)" font-size="11.5">0.7</text>
+              <!-- 5MB -->
+              <text x="78" y="103" text-anchor="end" fill="var(--ink-2)">5MB</text>
+              <rect class="bar" data-t="5MB payload — DOM org.json: 21.7 MB peak heap / 102 ms" x="90" y="82" width="104.5" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="200" y="93" fill="var(--ink-2)" font-size="11.5">21.7</text>
+              <rect class="bar" data-t="5MB payload — Taper: 1.5 MB peak heap / 88 ms" x="90" y="98" width="7.2" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="103" y="109" fill="var(--ink-2)" font-size="11.5">1.5</text>
+              <!-- 10MB -->
+              <text x="78" y="157" text-anchor="end" fill="var(--ink-2)">10MB</text>
+              <rect class="bar" data-t="10MB payload — DOM org.json: 43.2 MB peak heap / 175 ms" x="90" y="136" width="208" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="304" y="147" fill="var(--ink-2)" font-size="11.5">43.2</text>
+              <rect class="bar" data-t="10MB payload — Taper: 2.4 MB peak heap / 160 ms" x="90" y="152" width="11.6" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="107" y="163" fill="var(--ink-2)" font-size="11.5">2.4</text>
+              <!-- 25MB -->
+              <text x="78" y="211" text-anchor="end" fill="var(--ink-2)">25MB</text>
+              <rect class="bar" data-t="25MB payload — DOM org.json: 108.0 MB peak heap / 408 ms" x="90" y="190" width="520" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="616" y="201" fill="var(--ink-2)" font-size="11.5">108.0</text>
+              <rect class="bar" data-t="25MB payload — Taper: 5.6 MB peak heap / 328 ms" x="90" y="206" width="27" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="123" y="217" fill="var(--ink-2)" font-size="11.5">5.6</text>
+              <!-- 50MB -->
+              <text x="78" y="265" text-anchor="end" fill="var(--ink-2)">50MB</text>
+              <text x="94" y="255" fill="var(--critical)" font-weight="700" font-size="12">✕ OutOfMemoryError</text>
+              <rect class="bar" data-t="50MB payload — Taper: 10.5 MB peak heap / 622 ms" x="90" y="260" width="50.6" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="146" y="271" fill="var(--ink-2)" font-size="11.5">10.5</text>
+            </g>
+            <line x1="90" y1="16" x2="90" y2="292" stroke="var(--baseline)" stroke-width="1.5"/>
+          </svg>
+          <figcaption>Peak heap by payload size on Emulator. Medians of 3 isolated runs; at 50MB both DOM baselines crashed while Taper peaked at 10.5&nbsp;MB.</figcaption>
+        </div>
+      </figure>
+
+      <div class="table-scroll hud-block">
+        <div class="hud-block-inner">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
+              <tbody>
+                <tr><td>100KB</td><td>0.8 MB / 4 ms</td><td>0.5 MB / 14 ms</td><td>0.2 MB / 21 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>500KB</td><td>2.1 MB / 15 ms</td><td>2.0 MB / 31 ms</td><td>0.6 MB / 28 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>1MB</td><td>4.3 MB / 32 ms</td><td>4.2 MB / 39 ms</td><td>0.7 MB / 39 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>2MB</td><td>8.8 MB / 51 ms</td><td>8.2 MB / 55 ms</td><td>0.8 MB / 54 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>5MB</td><td>21.7 MB / 102 ms</td><td>20.7 MB / 103 ms</td><td>1.5 MB / 88 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>10MB</td><td>43.2 MB / 175 ms</td><td>41.0 MB / 149 ms</td><td>2.4 MB / 160 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>25MB <em>(stress)</em></td><td>108.0 MB / 408 ms</td><td>100.6 MB / 296 ms</td><td>5.6 MB / 328 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td class="oom">OutOfMemoryError</td><td>10.5 MB / 622 ms</td><td><span class="badge badge-oom">1 / 1 / 0</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <svg class="chart-svg" viewBox="0 0 760 330" role="img" aria-label="Grouped bar chart of peak heap: DOM parsing grows to 108 megabytes at a 25 megabyte payload and crashes with OutOfMemoryError at 50 megabytes, while Taper stays between 0.7 and 10.5 megabytes.">
-        <!-- gridlines: 0/25/50/75/100 MB, plot x=90..610 (520px / 108MB) -->
-        <g stroke="var(--grid)" stroke-width="1">
-          <line x1="90" y1="16" x2="90" y2="292"/>
-          <line x1="210.4" y1="16" x2="210.4" y2="292"/>
-          <line x1="330.7" y1="16" x2="330.7" y2="292"/>
-          <line x1="451.1" y1="16" x2="451.1" y2="292"/>
-          <line x1="571.5" y1="16" x2="571.5" y2="292"/>
-        </g>
-        <g fill="var(--muted)" font-size="11" text-anchor="middle">
-          <text x="90" y="308">0</text><text x="210.4" y="308">25</text>
-          <text x="330.7" y="308">50</text><text x="451.1" y="308">75</text>
-          <text x="571.5" y="308">100 MB peak heap</text>
-        </g>
-        <!-- groups: y start 24, group pitch 54; bars 14px, 2px gap -->
-        <g font-size="12.5">
-          <!-- 1MB -->
-          <text x="78" y="49" text-anchor="end" fill="var(--ink-2)">1MB</text>
-          <rect class="bar" data-t="1MB payload — DOM org.json: 4.3 MB peak heap / 32 ms" x="90" y="28" width="20.7" height="14" rx="3" fill="var(--series-1)"/>
-          <text x="116" y="39" fill="var(--ink-2)" font-size="11.5">4.3</text>
-          <rect class="bar" data-t="1MB payload — Taper: 0.7 MB peak heap / 39 ms" x="90" y="44" width="4" height="14" rx="2" fill="var(--series-2)"/>
-          <text x="100" y="55" fill="var(--ink-2)" font-size="11.5">0.7</text>
-          <!-- 5MB -->
-          <text x="78" y="103" text-anchor="end" fill="var(--ink-2)">5MB</text>
-          <rect class="bar" data-t="5MB payload — DOM org.json: 21.7 MB peak heap / 102 ms" x="90" y="82" width="104.5" height="14" rx="3" fill="var(--series-1)"/>
-          <text x="200" y="93" fill="var(--ink-2)" font-size="11.5">21.7</text>
-          <rect class="bar" data-t="5MB payload — Taper: 1.5 MB peak heap / 88 ms" x="90" y="98" width="7.2" height="14" rx="2" fill="var(--series-2)"/>
-          <text x="103" y="109" fill="var(--ink-2)" font-size="11.5">1.5</text>
-          <!-- 10MB -->
-          <text x="78" y="157" text-anchor="end" fill="var(--ink-2)">10MB</text>
-          <rect class="bar" data-t="10MB payload — DOM org.json: 43.2 MB peak heap / 175 ms" x="90" y="136" width="208" height="14" rx="3" fill="var(--series-1)"/>
-          <text x="304" y="147" fill="var(--ink-2)" font-size="11.5">43.2</text>
-          <rect class="bar" data-t="10MB payload — Taper: 2.4 MB peak heap / 160 ms" x="90" y="152" width="11.6" height="14" rx="3" fill="var(--series-2)"/>
-          <text x="107" y="163" fill="var(--ink-2)" font-size="11.5">2.4</text>
-          <!-- 25MB -->
-          <text x="78" y="211" text-anchor="end" fill="var(--ink-2)">25MB</text>
-          <rect class="bar" data-t="25MB payload — DOM org.json: 108.0 MB peak heap / 408 ms" x="90" y="190" width="520" height="14" rx="3" fill="var(--series-1)"/>
-          <text x="616" y="201" fill="var(--ink-2)" font-size="11.5">108.0</text>
-          <rect class="bar" data-t="25MB payload — Taper: 5.6 MB peak heap / 328 ms" x="90" y="206" width="27" height="14" rx="3" fill="var(--series-2)"/>
-          <text x="123" y="217" fill="var(--ink-2)" font-size="11.5">5.6</text>
-          <!-- 50MB -->
-          <text x="78" y="265" text-anchor="end" fill="var(--ink-2)">50MB</text>
-          <text x="94" y="255" fill="var(--critical)" font-weight="700" font-size="12">✕ OutOfMemoryError</text>
-          <rect class="bar" data-t="50MB payload — Taper: 10.5 MB peak heap / 622 ms" x="90" y="260" width="50.6" height="14" rx="3" fill="var(--series-2)"/>
-          <text x="146" y="271" fill="var(--ink-2)" font-size="11.5">10.5</text>
-        </g>
-        <line x1="90" y1="16" x2="90" y2="292" stroke="var(--baseline)" stroke-width="1.5"/>
-      </svg>
-      <figcaption>Peak heap by payload size. Values are MB (median of 3 isolated runs); at 50MB both DOM baselines crashed while Taper peaked at 10.5&nbsp;MB. Numbers are specific to this payload shape and device profile — <a href="https://github.com/rsngpt/taper/blob/main/run_benchmark.sh">rerun the harness</a> on your target hardware before quoting them.</figcaption>
-    </figure>
-
-    <div style="height:20px"></div>
-    <div class="table-scroll">
-    <table>
-      <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
-      <tbody>
-        <tr><td>100KB</td><td>0.8 MB / 4 ms</td><td>0.5 MB / 14 ms</td><td>0.2 MB / 21 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>500KB</td><td>2.1 MB / 15 ms</td><td>2.0 MB / 31 ms</td><td>0.6 MB / 28 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>1MB</td><td>4.3 MB / 32 ms</td><td>4.2 MB / 39 ms</td><td>0.7 MB / 39 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>2MB</td><td>8.8 MB / 51 ms</td><td>8.2 MB / 55 ms</td><td>0.8 MB / 54 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>5MB</td><td>21.7 MB / 102 ms</td><td>20.7 MB / 103 ms</td><td>1.5 MB / 88 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>10MB</td><td>43.2 MB / 175 ms</td><td>41.0 MB / 149 ms</td><td>2.4 MB / 160 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>25MB <em>(stress)</em></td><td>108.0 MB / 408 ms</td><td>100.6 MB / 296 ms</td><td>5.6 MB / 328 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td class="oom">OutOfMemoryError</td><td>10.5 MB / 622 ms</td><td>1 / 1 / 0</td></tr>
-      </tbody>
-    </table>
     </div>
 
-    <div style="height:28px"></div>
-    <h3 style="margin:0 0 8px">Real hardware: Redmi Note 7 Pro (4GB RAM, Android 10, 256MB heap limit)</h3>
-    <p class="sub" style="margin-bottom:16px">The real device is harsher on the naive path: org.json cost ~10× the payload size — 103.5&nbsp;MB of heap for a 10&nbsp;MB response — and OOM'd at 50&nbsp;MB despite the larger heap limit; Gson survived 50&nbsp;MB only by consuming 213&nbsp;MB of the 256&nbsp;MB budget.</p>
-    <div class="table-scroll">
-    <table>
-      <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
-      <tbody>
-        <tr><td>100KB</td><td>1.4 MB / 33 ms</td><td>0.5 MB / 45 ms</td><td>0.2 MB / 14 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>500KB</td><td>4.5 MB / 69 ms</td><td>2.6 MB / 87 ms</td><td>1.1 MB / 51 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>1MB</td><td>7.5 MB / 161 ms</td><td>5.0 MB / 175 ms</td><td>1.8 MB / 124 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>2MB</td><td>18.1 MB / 304 ms</td><td>9.9 MB / 329 ms</td><td>2.3 MB / 225 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>5MB</td><td>58.8 MB / 830 ms</td><td>24.1 MB / 1018 ms</td><td>3.6 MB / 464 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>10MB</td><td>103.5 MB / 1300 ms</td><td>47.0 MB / 1052 ms</td><td>6.5 MB / 845 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>25MB <em>(stress)</em></td><td>175.9 MB / 3156 ms</td><td>110.0 MB / 2617 ms</td><td>11.9 MB / 1854 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td>213.0 MB / 5249 ms</td><td>21.2 MB / 3908 ms</td><td>1 / 0 / 0</td></tr>
-      </tbody>
-    </table>
+    <!-- PANEL 2: REDMI NOTE 7 PRO -->
+    <div class="tab-panel" id="device-redmi" role="tabpanel">
+      <p class="sub" style="margin-bottom: 24px; font-weight: 500; text-align: center;">Redmi Note 7 Pro real hardware (4GB RAM, Android 10, 256MB heap limit)</p>
+      
+      <figure class="chart hud-block">
+        <div class="hud-block-inner">
+          <div class="legend" aria-hidden="true">
+            <span><span class="sw" style="background:var(--series-1)"></span>DOM (org.json)</span>
+            <span><span class="sw" style="background:var(--series-2)"></span>Taper streaming</span>
+          </div>
+          <svg class="chart-svg" viewBox="0 0 760 330" role="img" aria-label="Grouped bar chart of peak heap for Redmi: DOM parsing grows to 175.9 megabytes at a 25 megabyte payload and crashes with OutOfMemoryError at 50 megabytes, while Taper stays under 21.2 megabytes.">
+            <!-- gridlines: 0/50/100/150/200 MB, plot x=90..610 (520px / 200MB) -->
+            <g stroke="var(--grid)" stroke-width="1">
+              <line x1="90" y1="16" x2="90" y2="292"/>
+              <line x1="220" y1="16" x2="220" y2="292"/>
+              <line x1="350" y1="16" x2="350" y2="292"/>
+              <line x1="480" y1="16" x2="480" y2="292"/>
+              <line x1="610" y1="16" x2="610" y2="292"/>
+            </g>
+            <g fill="var(--muted)" font-size="11" text-anchor="middle">
+              <text x="90" y="308">0</text><text x="220" y="308">50</text>
+              <text x="350" y="308">100</text><text x="480" y="308">150</text>
+              <text x="610" y="308">200 MB peak heap</text>
+            </g>
+            <g font-size="12.5">
+              <!-- 1MB -->
+              <text x="78" y="49" text-anchor="end" fill="var(--ink-2)">1MB</text>
+              <rect class="bar" data-t="1MB payload — DOM org.json: 7.5 MB peak heap / 161 ms" x="90" y="28" width="19.5" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="115" y="39" fill="var(--ink-2)" font-size="11.5">7.5</text>
+              <rect class="bar" data-t="1MB payload — Taper: 1.8 MB peak heap / 124 ms" x="90" y="44" width="4.7" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="100" y="55" fill="var(--ink-2)" font-size="11.5">1.8</text>
+              <!-- 5MB -->
+              <text x="78" y="103" text-anchor="end" fill="var(--ink-2)">5MB</text>
+              <rect class="bar" data-t="5MB payload — DOM org.json: 58.8 MB peak heap / 830 ms" x="90" y="82" width="152.9" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="248" y="93" fill="var(--ink-2)" font-size="11.5">58.8</text>
+              <rect class="bar" data-t="5MB payload — Taper: 3.6 MB peak heap / 464 ms" x="90" y="98" width="9.4" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="105" y="109" fill="var(--ink-2)" font-size="11.5">3.6</text>
+              <!-- 10MB -->
+              <text x="78" y="157" text-anchor="end" fill="var(--ink-2)">10MB</text>
+              <rect class="bar" data-t="10MB payload — DOM org.json: 103.5 MB peak heap / 1300 ms" x="90" y="136" width="269.1" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="365" y="147" fill="var(--ink-2)" font-size="11.5">103.5</text>
+              <rect class="bar" data-t="10MB payload — Taper: 6.5 MB peak heap / 845 ms" x="90" y="152" width="16.9" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="112" y="163" fill="var(--ink-2)" font-size="11.5">6.5</text>
+              <!-- 25MB -->
+              <text x="78" y="211" text-anchor="end" fill="var(--ink-2)">25MB</text>
+              <rect class="bar" data-t="25MB payload — DOM org.json: 175.9 MB peak heap / 3156 ms" x="90" y="190" width="457.3" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="553" y="201" fill="var(--ink-2)" font-size="11.5">175.9</text>
+              <rect class="bar" data-t="25MB payload — Taper: 11.9 MB peak heap / 1854 ms" x="90" y="206" width="30.9" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="127" y="217" fill="var(--ink-2)" font-size="11.5">11.9</text>
+              <!-- 50MB -->
+              <text x="78" y="265" text-anchor="end" fill="var(--ink-2)">50MB</text>
+              <text x="94" y="255" fill="var(--critical)" font-weight="700" font-size="12">✕ OutOfMemoryError</text>
+              <rect class="bar" data-t="50MB payload — Taper: 21.2 MB peak heap / 3908 ms" x="90" y="260" width="55.1" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="151" y="271" fill="var(--ink-2)" font-size="11.5">21.2</text>
+            </g>
+            <line x1="90" y1="16" x2="90" y2="292" stroke="var(--baseline)" stroke-width="1.5"/>
+          </svg>
+          <figcaption>Peak heap by payload size on Redmi. The real device is harsher on the naive path: org.json OOM'd at 50&nbsp;MB despite the larger 256MB heap limit, while Taper stayed flat peaking at 21.2&nbsp;MB.</figcaption>
+        </div>
+      </figure>
+
+      <div class="table-scroll hud-block">
+        <div class="hud-block-inner">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
+              <tbody>
+                <tr><td>100KB</td><td>1.4 MB / 33 ms</td><td>0.5 MB / 45 ms</td><td>0.2 MB / 14 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>500KB</td><td>4.5 MB / 69 ms</td><td>2.6 MB / 87 ms</td><td>1.1 MB / 51 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>1MB</td><td>7.5 MB / 161 ms</td><td>5.0 MB / 175 ms</td><td>1.8 MB / 124 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>2MB</td><td>18.1 MB / 304 ms</td><td>9.9 MB / 329 ms</td><td>2.3 MB / 225 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>5MB</td><td>58.8 MB / 830 ms</td><td>24.1 MB / 1018 ms</td><td>3.6 MB / 464 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>10MB</td><td>103.5 MB / 1300 ms</td><td>47.0 MB / 1052 ms</td><td>6.5 MB / 845 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>25MB <em>(stress)</em></td><td>175.9 MB / 3156 ms</td><td>110.0 MB / 2617 ms</td><td>11.9 MB / 1854 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>50MB <em>(stress)</em></td><td class="oom">OutOfMemoryError</td><td>213.0 MB / 5249 ms</td><td>21.2 MB / 3908 ms</td><td><span class="badge badge-oom">1 / 0 / 0</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div style="height:28px"></div>
-    <h3 style="margin:0 0 8px">Real hardware: Samsung Galaxy A31 (6GB RAM, Android 12, 256MB heap limit)</h3>
-    <p class="sub" style="margin-bottom:16px">Same per-app heap limit as the Redmi, but no OOM anywhere — org.json squeaked through 50&nbsp;MB at 219.8&nbsp;MB, ~36&nbsp;MB below the cap. The identical heap cap with a different outcome shows the exact OOM point isn't a fixed number — it's whatever else is competing for that budget at the moment of the run. The <em>shape</em> of the result (Taper flat, DOM linear) is what reproduces across devices.</p>
-    <div class="table-scroll">
-    <table>
-      <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
-      <tbody>
-        <tr><td>100KB</td><td>0.7 MB / 12 ms</td><td>0.5 MB / 52 ms</td><td>0.2 MB / 79 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>500KB</td><td>3.3 MB / 56 ms</td><td>2.5 MB / 120 ms</td><td>0.9 MB / 97 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>1MB</td><td>6.6 MB / 121 ms</td><td>5.1 MB / 172 ms</td><td>1.9 MB / 142 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>2MB</td><td>9.1 MB / 287 ms</td><td>8.9 MB / 316 ms</td><td>3.8 MB / 235 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>5MB</td><td>22.4 MB / 694 ms</td><td>24.2 MB / 566 ms</td><td>6.6 MB / 567 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>10MB</td><td>44.8 MB / 1316 ms</td><td>46.7 MB / 1152 ms</td><td>7.9 MB / 1073 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>25MB <em>(stress)</em></td><td>109.3 MB / 3256 ms</td><td>114.3 MB / 2486 ms</td><td>11.6 MB / 2649 ms</td><td>0 / 0 / 0</td></tr>
-        <tr><td>50MB <em>(stress)</em></td><td>219.8 MB / 6348 ms</td><td>229.3 MB / 5131 ms</td><td>20.5 MB / 5108 ms</td><td>0 / 0 / 0</td></tr>
-      </tbody>
-    </table>
+    <!-- PANEL 3: SAMSUNG GALAXY A31 -->
+    <div class="tab-panel" id="device-samsung" role="tabpanel">
+      <p class="sub" style="margin-bottom: 24px; font-weight: 500; text-align: center;">Samsung Galaxy A31 real hardware (6GB RAM, Android 12, 256MB heap limit)</p>
+      
+      <figure class="chart hud-block">
+        <div class="hud-block-inner">
+          <div class="legend" aria-hidden="true">
+            <span><span class="sw" style="background:var(--series-1)"></span>DOM (org.json)</span>
+            <span><span class="sw" style="background:var(--series-2)"></span>Taper streaming</span>
+          </div>
+          <svg class="chart-svg" viewBox="0 0 760 330" role="img" aria-label="Grouped bar chart of peak heap for Samsung: DOM parsing grows to 219.8 megabytes at a 50 megabyte payload, while Taper stays under 20.5 megabytes.">
+            <!-- gridlines: 0/50/100/150/200/250 MB, plot x=90..610 (520px / 250MB) -->
+            <g stroke="var(--grid)" stroke-width="1">
+              <line x1="90" y1="16" x2="90" y2="292"/>
+              <line x1="194" y1="16" x2="194" y2="292"/>
+              <line x1="298" y1="16" x2="298" y2="292"/>
+              <line x1="402" y1="16" x2="402" y2="292"/>
+              <line x1="506" y1="16" x2="506" y2="292"/>
+              <line x1="610" y1="16" x2="610" y2="292"/>
+            </g>
+            <g fill="var(--muted)" font-size="11" text-anchor="middle">
+              <text x="90" y="308">0</text><text x="194" y="308">50</text>
+              <text x="298" y="308">100</text><text x="402" y="308">150</text>
+              <text x="506" y="308">200</text><text x="610" y="308">250 MB</text>
+            </g>
+            <g font-size="12.5">
+              <!-- 1MB -->
+              <text x="78" y="49" text-anchor="end" fill="var(--ink-2)">1MB</text>
+              <rect class="bar" data-t="1MB payload — DOM org.json: 6.6 MB peak heap / 121 ms" x="90" y="28" width="13.7" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="109" y="39" fill="var(--ink-2)" font-size="11.5">6.6</text>
+              <rect class="bar" data-t="1MB payload — Taper: 1.9 MB peak heap / 142 ms" x="90" y="44" width="4" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="100" y="55" fill="var(--ink-2)" font-size="11.5">1.9</text>
+              <!-- 5MB -->
+              <text x="78" y="103" text-anchor="end" fill="var(--ink-2)">5MB</text>
+              <rect class="bar" data-t="5MB payload — DOM org.json: 22.4 MB peak heap / 694 ms" x="90" y="82" width="46.6" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="142" y="93" fill="var(--ink-2)" font-size="11.5">22.4</text>
+              <rect class="bar" data-t="5MB payload — Taper: 6.6 MB peak heap / 567 ms" x="90" y="98" width="13.7" height="14" rx="2" fill="var(--series-2)"/>
+              <text x="110" y="109" fill="var(--ink-2)" font-size="11.5">6.6</text>
+              <!-- 10MB -->
+              <text x="78" y="157" text-anchor="end" fill="var(--ink-2)">10MB</text>
+              <rect class="bar" data-t="10MB payload — DOM org.json: 44.8 MB peak heap / 1316 ms" x="90" y="136" width="93.2" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="189" y="147" fill="var(--ink-2)" font-size="11.5">44.8</text>
+              <rect class="bar" data-t="10MB payload — Taper: 7.9 MB peak heap / 1073 ms" x="90" y="152" width="16.4" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="112" y="163" fill="var(--ink-2)" font-size="11.5">7.9</text>
+              <!-- 25MB -->
+              <text x="78" y="211" text-anchor="end" fill="var(--ink-2)">25MB</text>
+              <rect class="bar" data-t="25MB payload — DOM org.json: 109.3 MB peak heap / 3256 ms" x="90" y="190" width="227.3" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="323" y="201" fill="var(--ink-2)" font-size="11.5">109.3</text>
+              <rect class="bar" data-t="25MB payload — Taper: 11.6 MB peak heap / 2649 ms" x="90" y="206" width="24.1" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="120" y="217" fill="var(--ink-2)" font-size="11.5">11.6</text>
+              <!-- 50MB -->
+              <text x="78" y="265" text-anchor="end" fill="var(--ink-2)">50MB</text>
+              <rect class="bar" data-t="50MB payload — DOM org.json: 219.8 MB peak heap / 6348 ms" x="90" y="250" width="457.2" height="14" rx="3" fill="var(--series-1)"/>
+              <text x="553" y="261" fill="var(--ink-2)" font-size="11.5">219.8</text>
+              <rect class="bar" data-t="50MB payload — Taper: 20.5 MB peak heap / 5108 ms" x="90" y="266" width="42.6" height="14" rx="3" fill="var(--series-2)"/>
+              <text x="138" y="277" fill="var(--ink-2)" font-size="11.5">20.5</text>
+            </g>
+            <line x1="90" y1="16" x2="90" y2="292" stroke="var(--baseline)" stroke-width="1.5"/>
+          </svg>
+          <figcaption>Peak heap by payload size on Samsung Galaxy A31. Although it has a larger 6GB memory architecture, DOM parsing consumes 219.8&nbsp;MB at 50MB, whereas Taper maintains flat-line resource consumption peaking at 20.5&nbsp;MB.</figcaption>
+        </div>
+      </figure>
+
+      <div class="table-scroll hud-block">
+        <div class="hud-block-inner">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Payload</th><th>DOM org.json</th><th>DOM Gson tree</th><th>Taper streaming</th><th>OOMs</th></tr></thead>
+              <tbody>
+                <tr><td>100KB</td><td>0.7 MB / 12 ms</td><td>0.5 MB / 52 ms</td><td>0.2 MB / 79 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>500KB</td><td>3.3 MB / 56 ms</td><td>2.5 MB / 120 ms</td><td>0.9 MB / 97 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>1MB</td><td>6.6 MB / 121 ms</td><td>5.1 MB / 172 ms</td><td>1.9 MB / 142 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>2MB</td><td>9.1 MB / 287 ms</td><td>8.9 MB / 316 ms</td><td>3.8 MB / 235 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>5MB</td><td>22.4 MB / 694 ms</td><td>24.2 MB / 566 ms</td><td>6.6 MB / 567 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>10MB</td><td>44.8 MB / 1316 ms</td><td>46.7 MB / 1152 ms</td><td>7.9 MB / 1073 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>25MB <em>(stress)</em></td><td>109.3 MB / 3256 ms</td><td>114.3 MB / 2486 ms</td><td>11.6 MB / 2649 ms</td><td>0 / 0 / 0</td></tr>
+                <tr><td>50MB <em>(stress)</em></td><td>219.8 MB / 6348 ms</td><td>229.3 MB / 5131 ms</td><td>20.5 MB / 5108 ms</td><td>0 / 0 / 0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section>
+<section id="features">
   <div class="wrap">
     <h2>Three components, one dependency</h2>
     <p class="sub">Kotlin, minSdk 24, no cloud dependency. Each piece works alone; together they cover the ingest → classify → sync loop.</p>
     <div class="cards">
-      <div class="card">
-        <h3>1 · Streaming parser</h3>
-        <p>Declare <em>fields of interest</em>; everything else is skipped token-by-token and never allocated. Cost scales with what you extract, not document size.</p>
-        <pre class="code"><span class="kw">val</span> result = TaperParser().parse(
+      <div class="hud-block code-card">
+        <div class="hud-block-inner">
+          <div class="hud-tag">FP-01 // PARSER</div>
+          <div>
+            <h3>1 · Streaming parser</h3>
+            <p>Declare <em>fields of interest</em>; everything else is skipped token-by-token and never allocated. Cost scales with what you extract, not document size.</p>
+          </div>
+          <div class="code-container-ide">
+            <div class="code-container-ide-header">
+              <span class="circle"></span>
+              <span class="circle"></span>
+              <span class="circle"></span>
+            </div>
+            <pre class="code"><span class="kw">val</span> result = TaperParser().parse(
   inputStream,
   fieldsOfInterest = setOf(
     <span class="kw">"model"</span>,
@@ -299,90 +1114,122 @@ implementation(<span class="kw">"com.github.rsngpt:taper:v0.1.0"</span>)</pre>
 )
 <span class="kw">val</span> tokens =
   result.firstLong(<span class="kw">"usage.total_tokens"</span>)</pre>
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <h3>2 · Exception classifier</h3>
-        <p>Rules-based triage: <code>SEMANTIC</code> failures halt (they can never succeed on retry); <code>TRANSIENT</code> ones queue. 429 is transient despite being 4xx; 501 is semantic despite being 5xx.</p>
-        <pre class="code"><span class="kw">when</span> (ExceptionClassifier().classify(
+      
+      <div class="hud-block code-card">
+        <div class="hud-block-inner">
+          <div class="hud-tag">FP-02 // CLASSIFIER</div>
+          <div>
+            <h3>2 · Exception classifier</h3>
+            <p>Rules-based triage: <code>SEMANTIC</code> failures halt (they can never succeed on retry); <code>TRANSIENT</code> ones queue. 429 is transient despite being 4xx; 501 is semantic despite being 5xx.</p>
+          </div>
+          <div class="code-container-ide">
+            <div class="code-container-ide-header">
+              <span class="circle"></span>
+              <span class="circle"></span>
+              <span class="circle"></span>
+            </div>
+            <pre class="code"><span class="kw">when</span> (ExceptionClassifier().classify(
   AgentFailure(httpStatus = <span class="kw">429</span>)
 )) {
   TRANSIENT -&gt; queue.enqueue(convId, payload)
   SEMANTIC  -&gt; surfaceToUser()
 }</pre>
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <h3>3 · Offline sync queue</h3>
-        <p>Room-backed, survives process death, and on reconnect coalesces every pending update into <strong>one batch per conversation</strong> instead of a request flood.</p>
-        <pre class="code"><span class="kw">val</span> queue = SyncQueue.create(context)
+      
+      <div class="hud-block code-card">
+        <div class="hud-block-inner">
+          <div class="hud-tag">FP-03 // SYNCER</div>
+          <div>
+            <h3>3 · Offline sync queue</h3>
+            <p>Room-backed, survives process death, and on reconnect coalesces every pending update into <strong>one batch per conversation</strong> instead of a request flood.</p>
+          </div>
+          <div class="code-container-ide">
+            <div class="code-container-ide-header">
+              <span class="circle"></span>
+              <span class="circle"></span>
+              <span class="circle"></span>
+            </div>
+            <pre class="code"><span class="kw">val</span> queue = SyncQueue.create(context)
 queue.enqueue(<span class="kw">"conv-42"</span>, updateJson)
 ConnectivityDrainTrigger(
   context, queue, syncer, scope
 ).start()</pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section id="architecture">
   <div class="wrap">
     <h2>How it fits together</h2>
     <p class="sub">Failures loop through the classifier; only transient ones re-enter the durable queue. The <code>ParserEngine</code> interface is the seam where a native/ashmem engine plugs in later without breaking the public API.</p>
-    <svg class="arch-svg" viewBox="0 0 900 320" role="img" aria-label="Architecture: agent responses flow through TaperParser to results; failures flow through the ExceptionClassifier, which halts semantic failures and queues transient ones in the Room-backed SyncQueue; the queue drains coalesced batches per conversation through the app's Syncer when connectivity returns.">
-      <defs>
-        <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M0 0 L8 4 L0 8 z" fill="var(--muted)"/>
-        </marker>
-      </defs>
-      <g font-size="13" font-family="system-ui">
-        <!-- parser lane -->
-        <rect x="20" y="30" width="170" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
-        <text x="105" y="50" text-anchor="middle" fill="var(--ink)">Agent HTTP response</text>
-        <text x="105" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">multi-MB JSON</text>
-        <rect x="250" y="30" width="150" height="46" rx="9" fill="var(--series-1)" opacity="0.14" stroke="var(--series-1)"/>
-        <text x="325" y="50" text-anchor="middle" fill="var(--ink)" font-weight="600">TaperParser</text>
-        <text x="325" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">streaming, fields-of-interest</text>
-        <rect x="460" y="30" width="160" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
-        <text x="540" y="50" text-anchor="middle" fill="var(--ink)">TaperResult</text>
-        <text x="540" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">/ ExtractionSink</text>
-        <rect x="680" y="30" width="200" height="46" rx="9" fill="none" stroke="var(--grid)" stroke-dasharray="5 4"/>
-        <text x="780" y="50" text-anchor="middle" fill="var(--muted)">ParserEngine (v2 seam)</text>
-        <text x="780" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">native / ashmem / FlatBuffers</text>
-        <line x1="190" y1="53" x2="243" y2="53" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <line x1="400" y1="53" x2="453" y2="53" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <line x1="620" y1="53" x2="673" y2="53" stroke="var(--grid)" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <!-- classifier lane -->
-        <rect x="20" y="150" width="170" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
-        <text x="105" y="177" text-anchor="middle" fill="var(--ink)">Failure</text>
-        <rect x="250" y="150" width="150" height="46" rx="9" fill="var(--series-1)" opacity="0.14" stroke="var(--series-1)"/>
-        <text x="325" y="170" text-anchor="middle" fill="var(--ink)" font-weight="600">ExceptionClassifier</text>
-        <text x="325" y="186" text-anchor="middle" fill="var(--muted)" font-size="11">body → status → exception</text>
-        <rect x="460" y="118" width="160" height="40" rx="9" fill="none" stroke="var(--critical)"/>
-        <text x="540" y="142" text-anchor="middle" fill="var(--critical)">SEMANTIC → halt</text>
-        <line x1="190" y1="173" x2="243" y2="173" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <line x1="400" y1="160" x2="453" y2="140" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <line x1="400" y1="186" x2="453" y2="216" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <!-- queue lane -->
-        <rect x="460" y="196" width="160" height="52" rx="9" fill="var(--series-2)" opacity="0.14" stroke="var(--series-2)"/>
-        <text x="540" y="216" text-anchor="middle" fill="var(--ink)" font-weight="600">SyncQueue</text>
-        <text x="540" y="233" text-anchor="middle" fill="var(--muted)" font-size="11">Room/SQLite · survives kill</text>
-        <rect x="680" y="196" width="200" height="52" rx="9" fill="none" stroke="var(--baseline)"/>
-        <text x="780" y="216" text-anchor="middle" fill="var(--ink)">Syncer → network</text>
-        <text x="780" y="233" text-anchor="middle" fill="var(--muted)" font-size="11">1 coalesced batch / conversation</text>
-        <line x1="620" y1="222" x2="673" y2="222" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <!-- syncer failure loops back to classifier -->
-        <path d="M 780 248 L 780 292 L 325 292 L 325 203" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 4" marker-end="url(#arr)"/>
-        <text x="552" y="286" text-anchor="middle" fill="var(--muted)" font-size="11">sync failure re-classified</text>
-        <!-- connectivity trigger -->
-        <rect x="250" y="222" width="150" height="40" rx="9" fill="none" stroke="var(--baseline)"/>
-        <text x="325" y="240" text-anchor="middle" fill="var(--ink)" font-size="12">Connectivity trigger</text>
-        <text x="325" y="255" text-anchor="middle" fill="var(--muted)" font-size="11">drains on reconnect</text>
-        <line x1="400" y1="234" x2="453" y2="228" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-      </g>
-    </svg>
+    <div class="hud-block">
+      <div class="hud-block-inner">
+        <svg class="arch-svg" viewBox="0 0 900 320" role="img" aria-label="Architecture: agent responses flow through TaperParser to results; failures flow through the ExceptionClassifier, which halts semantic failures and queues transient ones in the Room-backed SyncQueue; the queue drains coalesced batches per conversation through the app's Syncer when connectivity returns.">
+          <defs>
+            <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L8 4 L0 8 z" fill="var(--muted)"/>
+            </marker>
+          </defs>
+          <g font-size="13" fill="var(--ink)">
+            <!-- parser lane -->
+            <rect x="20" y="30" width="170" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
+            <text x="105" y="50" text-anchor="middle" fill="var(--ink)">Agent HTTP response</text>
+            <text x="105" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">multi-MB JSON</text>
+            <rect x="250" y="30" width="150" height="46" rx="9" fill="var(--primary-glow)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="325" y="50" text-anchor="middle" fill="var(--ink)" font-weight="600">TaperParser</text>
+            <text x="325" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">streaming, fields-of-interest</text>
+            <rect x="460" y="30" width="160" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
+            <text x="540" y="50" text-anchor="middle" fill="var(--ink)">TaperResult</text>
+            <text x="540" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">/ ExtractionSink</text>
+            <rect x="680" y="30" width="200" height="46" rx="9" fill="none" stroke="var(--grid)" stroke-dasharray="5 4"/>
+            <text x="780" y="50" text-anchor="middle" fill="var(--muted)">ParserEngine (v2 seam)</text>
+            <text x="780" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">native / ashmem / FlatBuffers</text>
+            <line x1="190" y1="53" x2="243" y2="53" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="400" y1="53" x2="453" y2="53" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="620" y1="53" x2="673" y2="53" stroke="var(--grid)" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <!-- classifier lane -->
+            <rect x="20" y="150" width="170" height="46" rx="9" fill="none" stroke="var(--baseline)"/>
+            <text x="105" y="177" text-anchor="middle" fill="var(--ink)">Failure</text>
+            <rect x="250" y="150" width="150" height="46" rx="9" fill="var(--primary-glow)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="325" y="170" text-anchor="middle" fill="var(--ink)" font-weight="600">ExceptionClassifier</text>
+            <text x="325" y="186" text-anchor="middle" fill="var(--muted)" font-size="11">body → status → exception</text>
+            <rect x="460" y="118" width="160" height="40" rx="9" fill="none" stroke="var(--critical)"/>
+            <text x="540" y="142" text-anchor="middle" fill="var(--critical)">SEMANTIC → halt</text>
+            <line x1="190" y1="173" x2="243" y2="173" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="400" y1="160" x2="453" y2="140" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="400" y1="186" x2="453" y2="216" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <!-- queue lane -->
+            <rect x="460" y="196" width="160" height="52" rx="9" fill="var(--primary-glow)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="540" y="216" text-anchor="middle" fill="var(--ink)" font-weight="600">SyncQueue</text>
+            <text x="540" y="233" text-anchor="middle" fill="var(--muted)" font-size="11">Room/SQLite · survives kill</text>
+            <rect x="680" y="196" width="200" height="52" rx="9" fill="none" stroke="var(--baseline)"/>
+            <text x="780" y="216" text-anchor="middle" fill="var(--ink)">Syncer → network</text>
+            <text x="780" y="233" text-anchor="middle" fill="var(--muted)" font-size="11">1 coalesced batch / conversation</text>
+            <line x1="620" y1="222" x2="673" y2="222" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <!-- syncer failure loops back to classifier -->
+            <path d="M 780 248 L 780 292 L 325 292 L 325 203" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 4" marker-end="url(#arr)"/>
+            <text x="552" y="286" text-anchor="middle" fill="var(--muted)" font-size="11">sync failure re-classified</text>
+            <!-- connectivity trigger -->
+            <rect x="250" y="222" width="150" height="40" rx="9" fill="none" stroke="var(--baseline)"/>
+            <text x="325" y="240" text-anchor="middle" fill="var(--ink)" font-size="12">Connectivity trigger</text>
+            <text x="325" y="255" text-anchor="middle" fill="var(--muted)" font-size="11">drains on reconnect</text>
+            <line x1="400" y1="234" x2="453" y2="228" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+          </g>
+        </svg>
+      </div>
+    </div>
   </div>
 </section>
 
-<section>
+<section id="scope">
   <div class="wrap">
     <h2>Honest scope</h2>
     <p class="sub">What v1 is — and deliberately isn't.</p>
@@ -391,7 +1238,7 @@ ConnectivityDrainTrigger(
       <li><b>Not built, by design:</b> FlatBuffers/ashmem/JNI engines (interface seam only), ML failure classification (rules are auditable and the signals are documented contracts; a logistic-regression tie-breaker is the scoped v2), cloud gateway / context compression.</li>
       <li><b>Every number on this page was measured by the harness in this repo</b> — on one emulator profile. Different payload shapes and devices will differ; the harness is one script away.</li>
     </ul>
-    <p><a href="https://github.com/rsngpt/taper#tradeoffs">Read the full tradeoffs doc →</a></p>
+    <p><a href="https://github.com/rsngpt/taper#tradeoffs" style="font-weight:700;">Read the full tradeoffs doc →</a></p>
   </div>
 </section>
 
@@ -428,6 +1275,177 @@ ConnectivityDrainTrigger(
     });
     bar.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
   });
+
+  // Device tabs switcher
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetId = btn.dataset.target;
+      
+      // Update buttons active state
+      document.querySelectorAll('.tab-btn').forEach(function (b) {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      
+      // Update panels active state
+      document.querySelectorAll('.tab-panel').forEach(function (panel) {
+        panel.classList.remove('active');
+      });
+      document.getElementById(targetId).classList.add('active');
+      
+      // Recalculate card positions for halftone refraction on layout change
+      setTimeout(resize, 60);
+    });
+  });
+
+  // Scroll reveal observer
+  var revealObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('reveal-active');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // Observe items
+  document.querySelectorAll('section, figure.chart, .table-scroll, .arch-svg, .cards').forEach(function (el) {
+    el.classList.add('reveal-hidden');
+    revealObserver.observe(el);
+  });
+
+  // Interactive mouse glow and dynamic halftone canvas follower
+  var canvas = document.createElement('canvas');
+  canvas.className = 'halftone-canvas';
+  document.body.appendChild(canvas);
+  
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var mouse = { x: -1000, y: -1000, active: false };
+  var spacing = 24;
+  
+  var cardRects = [];
+  function updateCardBoxes() {
+    cardRects = [];
+    document.querySelectorAll('.hud-block').forEach(function (el) {
+      var rect = el.getBoundingClientRect();
+      cardRects.push({
+        left: rect.left,
+        right: rect.right,
+        top: rect.top + window.scrollY,
+        bottom: rect.bottom + window.scrollY
+      });
+    });
+  }
+
+  function resize() {
+    var width = document.documentElement.scrollWidth;
+    var height = document.documentElement.scrollHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.scale(dpr, dpr);
+    updateCardBoxes();
+    draw();
+  }
+  
+  function getColors() {
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return {
+      base: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.07)',
+      accent: '#0056FF'
+    };
+  }
+  
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    
+    var w = canvas.width / dpr;
+    var h = canvas.height / dpr;
+    var colors = getColors();
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    for (var x = spacing / 2; x < w; x += spacing) {
+      for (var y = spacing / 2; y < h; y += spacing) {
+        // 1. Detect if this grid coordinate falls behind a glass card
+        var inGlass = false;
+        for (var i = 0; i < cardRects.length; i++) {
+          var r = cardRects[i];
+          if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+            inGlass = true;
+            break;
+          }
+        }
+        
+        // 2. Base position and visual styling (refracted shifts if behind glass)
+        var dotX = inGlass ? x + 3.5 : x;
+        var dotY = inGlass ? y + 3.5 : y;
+        var radius = 1.2;
+        var color = colors.base;
+        
+        // 3. Dynamic mouse interaction calculations
+        var dx = mouse.x - dotX;
+        var dy = mouse.y - dotY;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        
+        // Dynamic area of influence (within 220px of cursor)
+        if (mouse.active && dist < 220) {
+          var factor = 1 - dist / 220; // 0 to 1
+          
+          // Deflect/push dots slightly away from mouse (simulating lens refraction)
+          var push = factor * 9;
+          if (dist > 0) {
+            dotX = dotX - (dx / dist) * push;
+            dotY = dotY - (dy / dist) * push;
+          }
+          
+          // Halftone sizing uplift (grows dots closer to mouse)
+          radius = 1.2 + factor * 1.2;
+          
+          // Transition color smoothly to pure brand blue with softer glow opacity (max 0.50)
+          color = 'rgba(0, 86, 255, ' + (0.07 + factor * 0.43) + ')';
+        }
+        
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    }
+  }
+  
+  var clientX = -1000;
+  var clientY = -1000;
+  
+  window.addEventListener('mousemove', function (e) {
+    clientX = e.clientX;
+    clientY = e.clientY;
+    mouse.x = e.pageX;
+    mouse.y = e.pageY;
+    mouse.active = true;
+    requestAnimationFrame(draw);
+  });
+  
+  window.addEventListener('mouseleave', function () {
+    mouse.active = false;
+    requestAnimationFrame(draw);
+  });
+  
+  window.addEventListener('scroll', function () {
+    if (mouse.active) {
+      mouse.x = clientX + window.scrollX;
+      mouse.y = clientY + window.scrollY;
+      requestAnimationFrame(draw);
+    }
+  });
+  
+  window.addEventListener('resize', resize);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  
+  resize();
 </script>
 </body>
 </html>
