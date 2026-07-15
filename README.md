@@ -244,6 +244,13 @@ around each:
 3. `ScrollView.fullScroll(FOCUS_DOWN)` steals focus from the input field
    (UI-only, but a reminder that "works once" ≠ "works twice").
 
+Evidence is committed under [`demo/validation/`](demo/validation/): the
+on-device transcript showing every drill's classifier verdict and queue state
+([full transcript](demo/validation/live-drills-full-transcript.png)), the
+screenshot of the very first live request surfacing the `jsonValue` bug as a
+real 400 ([screenshot](demo/validation/first-real-request-caught-jsonvalue-bug.png)),
+and the server's access log for the session.
+
 Run it yourself: `ollama serve` + `ollama pull qwen2.5:3b` on the host, then
 `./gradlew :demo:installDebug` on an emulator (it reaches the host at
 `10.0.2.2:11434`).
