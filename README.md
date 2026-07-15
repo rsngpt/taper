@@ -213,6 +213,41 @@ The unit-test suite proves the same cliff without any device:
 (dies with `OutOfMemoryError`) and streams the identical file with Taper in the
 same cap (succeeds).
 
+## Validated against live traffic
+
+Synthetic benchmarks prove memory behaviour; they don't prove the components
+survive a real agent loop. The [`demo/`](demo/) module is a minimal chat app
+(bare `HttpURLConnection` — Taper is HTTP-client-agnostic) that runs all three
+components against a **live local LLM server** (Ollama + `qwen2.5:3b`, tool
+calling enabled), driven through scripted failure drills on 2026-07-15:
+
+| Drill | What happened |
+|---|---|
+| Happy path + tool call | Model requested `get_device_time`; `TaperParser` extracted `message.tool_calls[].function.{name,arguments}` and token counts straight off the live response stream; tool round-trip completed. |
+| Server killed mid-request | Genuine `ConnectException` → classifier: **TRANSIENT** → message queued. |
+| Process death with a queued message | App process killed (twice) while the message sat in the queue; on next launch `ConnectivityDrainTrigger` fired **automatically** and replayed it (`synced=1`), no user action. |
+| Airplane mode, 3 messages sent offline | Each classified TRANSIENT and queued; on reconnect the trigger drained **one coalesced batch** (`synced=3 transient=0 semantic=0`). |
+| Deliberately malformed request | Genuine Ollama `HTTP 400` (`json: cannot unmarshal…`) → classifier: **SEMANTIC** → halted, zero retries, nothing queued. |
+
+**What live traffic caught that synthetic tests didn't** — three real bugs, all
+in the demo's own integration code, with the library behaving as designed
+around each:
+
+1. Moshi's `JsonWriter.jsonValue(String)` encodes a *quoted string*, not raw
+   JSON — the first real request produced a genuine 400, which the classifier
+   correctly ruled SEMANTIC and refused to retry. (Fix: `valueSink()`.)
+2. Handing `ConnectivityDrainTrigger` a main-thread scope makes every syncer
+   die instantly with `NetworkOnMainThreadException` — an exception no rule
+   knows, so the classifier's TRANSIENT fallback kept the data queued instead
+   of dropping it (the designed bounded failure mode). The trigger's KDoc now
+   documents the I/O-dispatcher requirement.
+3. `ScrollView.fullScroll(FOCUS_DOWN)` steals focus from the input field
+   (UI-only, but a reminder that "works once" ≠ "works twice").
+
+Run it yourself: `ollama serve` + `ollama pull qwen2.5:3b` on the host, then
+`./gradlew :demo:installDebug` on an emulator (it reaches the host at
+`10.0.2.2:11434`).
+
 ## minSdk justification
 
 **minSdk 24** (Android 7.0). Two reasons:
@@ -239,6 +274,9 @@ same cap (succeeds).
   JVM where Taper streams the same 16MB payload) and process-death recovery
   tests against the real on-disk database.
 - Instrumented memory benchmark with per-test process isolation.
+- Live-traffic validation: a `demo/` chat app exercising all three components
+  against a real local LLM server (tool calls, induced failures, offline
+  drills — see § Validated against live traffic).
 
 **Explicitly out of scope for v1 (extension points left, nothing else):**
 - FlatBuffers / ashmem / JNI native memory mapping — the `ParserEngine`

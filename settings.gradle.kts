@@ -24,3 +24,4 @@ rootProject.name = "taper"
 
 include(":taper")
 include(":benchmark")
+include(":demo")

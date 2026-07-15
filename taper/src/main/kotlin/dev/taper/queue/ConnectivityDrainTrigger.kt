@@ -12,6 +12,12 @@ import kotlinx.coroutines.launch
  * Uses [ConnectivityManager.registerDefaultNetworkCallback] — available since
  * API 24, which is the reason for this library's minSdk (see README).
  * Overlapping triggers are safe: [SyncQueue.drain] serialises on a mutex.
+ *
+ * The drain runs in the [scope] YOU provide. Syncers almost always do blocking
+ * network I/O, so that scope must use an I/O-capable dispatcher (e.g.
+ * `Dispatchers.IO`) — a main-thread scope dies with `NetworkOnMainThreadException`
+ * inside the syncer, which the classifier will treat as a transient failure
+ * (data stays queued, but nothing ever syncs).
  */
 class ConnectivityDrainTrigger(
     context: Context,
