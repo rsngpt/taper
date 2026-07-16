@@ -80,10 +80,10 @@ dependencyResolutionManagement {
     repositories { maven("https://jitpack.io") }
 }
 // build.gradle.kts
-dependencies { implementation("com.github.rsngpt:taper:v0.1.0") }
+dependencies { implementation("com.github.rsngpt:taper:v0.1.1") }
 ```
 
-Or build locally: `./gradlew :taper:publishToMavenLocal` → `dev.taper:taper:0.1.0`.
+Or build locally: `./gradlew :taper:publishToMavenLocal` → `dev.taper:taper:0.1.1`.
 
 ### Quick start
 

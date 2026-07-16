@@ -12,10 +12,15 @@ dokka {
         // The generated Room implementation classes are internal plumbing.
         suppressGeneratedFiles.set(true)
     }
+    pluginsConfiguration.html {
+        // Taper's docs theme; loaded after Dokka's own stylesheets on every page,
+        // so regenerating docs never clobbers the branding again.
+        customStyleSheets.from("dokka-theme/taper-theme.css")
+    }
 }
 
 group = "dev.taper"
-version = "0.1.0"
+version = "0.1.1"
 
 android {
     namespace = "dev.taper"
